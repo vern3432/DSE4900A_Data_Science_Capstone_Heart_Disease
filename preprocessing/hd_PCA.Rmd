@@ -1,0 +1,160 @@
+---
+title: "Capstone_PCA"
+author: "Gregory A"
+date: "10/29/2024"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+```
+
+
+```{r}
+# loading data
+df <- read.csv("/Users/gregory/Desktop/school/capstone/code/Heart_Disease_Classification_Dataset_Cleaned.csv")
+```
+
+```{r}
+head(df)
+```
+
+
+```{r}
+df2 <- df %>%
+  select(age, sex, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, chest_pain_1, chest_pain_2, chest_pain_3, thal_1, thal_2, thal_3, target)
+head(df2)
+
+```
+
+```{r}
+# Running PCA on training data
+
+df.pca <- prcomp(df2[c(1:17)],scale=TRUE)
+```
+
+```{r}
+# Viewing Components
+head(df.pca)
+
+# PC1: thal_2, thal_3, oldpeak, thalach, slope
+# PC2: age, sex, chol, trestbps
+# PC3: chest_pain_3, thal_1
+# PC4: chol, thal_1
+# PC5: fbs, chest_pain_2, chest_pain_1
+# PC6: chest_pain_3, thal_1, ca
+# PC7: restecg
+# PC8: ca
+# PC9: fbs
+# so on and so forth
+```
+
+```{r}
+# Plotting first 2 components (and setting up df with the components)
+library(ggplot2)
+
+df_pca <- df2
+
+df_pca$PC1 <- df.pca$x[,1]
+df_pca$PC2 <- df.pca$x[,2]
+df_pca$PC3 <- df.pca$x[,3]
+df_pca$PC4 <- df.pca$x[,4]
+df_pca$PC5 <- df.pca$x[,5]
+df_pca$PC6 <- df.pca$x[,6]
+df_pca$PC7 <- df.pca$x[,7]
+df_pca$PC8 <- df.pca$x[,8]
+df_pca$PC9 <- df.pca$x[,9]
+df_pca$PC10 <- df.pca$x[,10]
+df_pca$PC11 <- df.pca$x[,11]
+df_pca$PC12 <- df.pca$x[,12]
+df_pca$PC13 <- df.pca$x[,13]
+df_pca$PC14 <- df.pca$x[,14]
+df_pca$PC15 <- df.pca$x[,15]
+df_pca$PC16 <- df.pca$x[,16]
+df_pca$PC17 <- df.pca$x[,17]
+
+df_pca <- df_pca %>%
+  select(-age, -sex, -trestbps, -chol, -fbs, -restecg, -thalach, -exang, -oldpeak, -slope, -ca, -chest_pain_1, -chest_pain_2, -chest_pain_3, -thal_1, -thal_2, -thal_3)
+
+head(df_pca)
+
+# The dataframe without the genre labels
+df_pca_genreless <- df_pca %>%
+  select(-target)
+
+# head(df_pca_genreless)
+
+# Plotting components with labels
+ggplot(df_pca, aes(x=PC1, y=PC2, color=target)) + geom_point()
+ggplot(df_pca, aes(x=PC1, y=PC3, color=target)) + geom_point()
+ggplot(df_pca, aes(x=PC2, y=PC3, color=target)) + geom_point()
+```
+
+
+```{r}
+# write data to csv
+write.csv(df_pca, "/Users/gregory/Desktop/school/capstone/code/hd_pca.csv")
+```
+
+
+
+
+```{r}
+# Varimax Rotation
+
+library(psych)
+df.pca <- prcomp(df2[c(1:17)],scale=TRUE)
+rotated_pca <- varimax(df.pca$rotation)
+```
+
+```{r}
+# Viewing Components
+head(rotated_pca)
+```
+
+```{r}
+df_pca_2 <- df2
+
+df_pca_2$PC1 <- rotated_pca$x[,1]
+df_pca_2$PC2 <- rotated_pca$x[,2]
+df_pca_2$PC3 <- rotated_pca$x[,3]
+df_pca_2$PC4 <- rotated_pca$x[,4]
+df_pca_2$PC5 <- rotated_pca$x[,5]
+df_pca_2$PC6 <- rotated_pca$x[,6]
+df_pca_2$PC7 <- rotated_pca$x[,7]
+df_pca_2$PC8 <- rotated_pca$x[,8]
+df_pca_2$PC9 <- rotated_pca$x[,9]
+df_pca_2$PC10 <- rotated_pca$x[,10]
+df_pca_2$PC11 <- rotated_pca$x[,11]
+df_pca_2$PC12 <- rotated_pca$x[,12]
+df_pca_2$PC13 <- rotated_pca$x[,13]
+df_pca_2$PC14 <- rotated_pca$x[,14]
+df_pca_2$PC15 <- rotated_pca$x[,15]
+df_pca_2$PC16 <- rotated_pca$x[,16]
+df_pca_2$PC17 <- rotated_pca$x[,17]
+
+df_pca_2 <- df_pca_2 %>%
+  select(-age, -sex, -trestbps, -chol, -fbs, -restecg, -thalach, -exang, -oldpeak, -slope, -ca, -chest_pain_1, -chest_pain_2, -chest_pain_3, -thal_1, -thal_2, -thal_3)
+
+head(df_pca_2)
+```
+
+```{r}
+# Write to CSV
+
+# Calculate rotated scores
+rotated_scores <- scale(df2[c(1:17)]) %*% rotated_pca$loadings
+
+# Create a data frame with rotated scores
+rotated_scores_df <- as.data.frame(rotated_scores)
+rotated_scores_df$target <- df2$target
+
+write.csv(rotated_scores_df, "hd_pca_varimax.csv")
+```
